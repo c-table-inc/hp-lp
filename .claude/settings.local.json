@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.fukushi-greencoop.or.jp)",
+      "WebFetch(domain:www.mural.co)",
+      "Bash(python3:*)",
+      "Bash(find /Users/spyder/c-table/c-table-dx-lp -type f \\\\\\(-name *.svg -o -name *.png -o -name *.jpg -o -name *.gif -o -name *.webp \\\\\\))",
+      "Bash(open:*)",
+      "WebFetch(domain:caroa.jp)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh run:*)",
+      "WebFetch(domain:www.nh-ss.co.jp)",
+      "Bash(curl -sL https://www.nh-ss.co.jp/)",
+      "Bash(curl -sL https://www.nh-ss.co.jp/css/style.css)",
+      "Bash(grep -oE '#[0-9a-fA-F]{3,8}')"
+    ]
+  }
+}
