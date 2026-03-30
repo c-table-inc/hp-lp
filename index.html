@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C-table | AIもシステムも、まずは対話から</title>
+  <meta name="description" content="C-tableは山梨県都留市を拠点に、AI導入支援・システム開発・ワークショップを通じて、地域の事業発展と人材育成を応援します。">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0faf4', 100: '#d1f0dc', 200: '#a3e1b9', 300: '#6cc88e',
+              400: '#3daa66', 500: '#2d8a50', 600: '#236e3f', 700: '#1a5430',
+              800: '#113a21', 900: '#0a2414',
+            },
+            orange: '#d75a11',
+            dark: '#231815',
+            mid: '#aeaeae',
+            fog: '#e3e8ee',
+            surface: '#f9f9f9',
+            warm: '#f2efea',
+          },
+          fontFamily: {
+            heading: ['"Zen Kaku Gothic New"', '"Noto Sans JP"', 'sans-serif'],
+            body: ['"Noto Sans JP"', '"Hiragino Kaku Gothic ProN"', 'sans-serif'],
+            en: ['"Montserrat"', 'sans-serif'],
+          },
+          maxWidth: { site: '1280px' },
+        }
+      }
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    ::selection { background: #d1f0dc; color: #113a21; }
+    body { letter-spacing: 0.05em; color: #231815; }
+
+    /* caroa.jp: body line-height 2 */
+    .body-text { line-height: 2; font-size: 15px; color: #666; }
+
+    /* caroa.jp heading pattern */
+    .section-en {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      color: #d75a11;
+    }
+    .section-title {
+      font-size: 24px;
+      line-height: 1.5;
+      font-weight: 700;
+      color: #231815;
+      letter-spacing: 0.06em;
+    }
+    @media (min-width: 840px) {
+      .section-title { font-size: 36px; line-height: 1.4; }
+    }
+
+    /* Card hover (caroa.jp: subtle) */
+    .card-hover {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    }
+
+    /* Navbar */
+    .nav-transition {
+      transition: transform 0.35s cubic-bezier(0.23,1,0.32,1), box-shadow 0.3s ease;
+    }
+
+    /* Marquee */
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .marquee-track { animation: marquee 35s linear infinite; }
+    .marquee-track:hover { animation-play-state: paused; }
+
+    /* CTA pulse */
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(215,90,17,0.3); }
+      50%      { box-shadow: 0 0 0 10px rgba(215,90,17,0); }
+    }
+    .cta-pulse { animation: pulse-ring 2.8s ease-in-out infinite; }
+
+    /* Hamburger */
+    .hamburger-line { transition: transform 0.3s ease, opacity 0.3s ease; }
+    .hamburger-active .hamburger-line:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .hamburger-active .hamburger-line:nth-child(2) { opacity: 0; }
+    .hamburger-active .hamburger-line:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+    .nav-link.active { color: #d75a11; }
+
+    /* caroa.jp: link with arrow */
+    .link-arrow { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+    .link-arrow svg { transition: transform 0.2s ease; }
+    .link-arrow:hover svg { transform: translateX(3px); }
+
+    /* Back to top */
+    .back-to-top { transition: opacity 0.3s ease, transform 0.3s ease; }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .marquee-track, .cta-pulse { animation: none; }
+      .card-hover:hover { transform: none; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+
+<body class="font-body bg-white overflow-x-hidden antialiased">
+
+  <!-- ===== HEADER (caroa: h=120px) ===== -->
+  <header id="navbar" class="nav-transition fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="flex items-center justify-between" style="height:80px;">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-3 cursor-pointer">
+          <div class="w-9 h-9 bg-primary-600 rounded flex items-center justify-center">
+            <span class="text-white font-bold text-base font-en">C</span>
+          </div>
+          <span class="text-[17px] font-bold text-dark tracking-tight font-heading">C-table</span>
+        </a>
+
+        <!-- Desktop Menu (caroa: spaced out) -->
+        <nav class="hidden lg:flex items-center gap-10" aria-label="メインメニュー">
+          <a href="#works" class="nav-link text-[13px] font-medium text-gray-500 hover:text-orange cursor-pointer transition-colors" data-section="works">実績</a>
+          <a href="#why" class="nav-link text-[13px] font-medium text-gray-500 hover:text-orange cursor-pointer transition-colors" data-section="why">強み</a>
+          <a href="#service" class="nav-link text-[13px] font-medium text-gray-500 hover:text-orange cursor-pointer transition-colors" data-section="service">サービス</a>
+          <a href="#process" class="nav-link text-[13px] font-medium text-gray-500 hover:text-orange cursor-pointer transition-colors" data-section="process">プロセス</a>
+          <a href="#news" class="nav-link text-[13px] font-medium text-gray-500 hover:text-orange cursor-pointer transition-colors" data-section="news">お知らせ</a>
+          <a href="#" class="text-[13px] font-medium text-gray-500 hover:text-orange cursor-pointer transition-colors">会社概要</a>
+        </nav>
+
+        <!-- CTA (caroa: orange accent) -->
+        <div class="hidden lg:flex items-center gap-3">
+          <a href="#download" class="text-[13px] font-bold text-dark border border-gray-300 rounded px-5 py-2.5 hover:border-orange hover:text-orange cursor-pointer transition-all">資料請求</a>
+          <a href="#contact" class="text-[13px] font-bold text-white bg-orange rounded px-5 py-2.5 hover:opacity-90 cursor-pointer transition-opacity">お問い合わせ</a>
+        </div>
+
+        <button id="hamburger" class="lg:hidden p-2 -mr-2 cursor-pointer" aria-label="メニュー" aria-expanded="false">
+          <div class="w-5 flex flex-col gap-[5px]">
+            <span class="hamburger-line block h-[1.5px] w-full bg-dark rounded-full"></span>
+            <span class="hamburger-line block h-[1.5px] w-full bg-dark rounded-full"></span>
+            <span class="hamburger-line block h-[1.5px] w-full bg-dark rounded-full"></span>
+          </div>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="lg:hidden hidden bg-white border-t border-gray-100">
+      <div class="px-5 py-6 space-y-1">
+        <a href="#works" class="block text-sm text-gray-600 hover:text-orange py-3 cursor-pointer">実績</a>
+        <a href="#why" class="block text-sm text-gray-600 hover:text-orange py-3 cursor-pointer">強み</a>
+        <a href="#service" class="block text-sm text-gray-600 hover:text-orange py-3 cursor-pointer">サービス</a>
+        <a href="#process" class="block text-sm text-gray-600 hover:text-orange py-3 cursor-pointer">プロセス</a>
+        <a href="#news" class="block text-sm text-gray-600 hover:text-orange py-3 cursor-pointer">お知らせ</a>
+        <a href="#" class="block text-sm text-gray-600 hover:text-orange py-3 cursor-pointer">会社概要</a>
+        <div class="flex flex-col gap-2 pt-4 mt-2 border-t border-gray-100">
+          <a href="#download" class="text-sm font-bold text-dark border border-gray-300 rounded px-5 py-3 text-center cursor-pointer">資料請求</a>
+          <a href="#contact" class="text-sm font-bold text-white bg-orange rounded px-5 py-3 text-center cursor-pointer">お問い合わせ</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ===== HERO (caroa: 48px heading, left-aligned, spacious) ===== -->
+  <section id="hero" class="pt-36 lg:pt-48 pb-20 lg:pb-32 bg-surface">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div>
+          <p class="font-en text-[13px] font-medium tracking-[0.12em] text-orange mb-5 fade-up">AI × Dialogue for the Future</p>
+
+          <h1 class="font-heading font-bold text-[30px] lg:text-[48px] leading-[1.35] text-dark mb-6 hero-title">
+            AIもシステムも、<br>まずは対話から。
+          </h1>
+
+          <p class="body-text mb-10 max-w-[500px] hero-sub">
+            AI時代の経営課題、「対話」と「可能化」から始めませんか？私たちが、現場に寄り添いながら一緒に考えます。
+          </p>
+
+          <div class="flex flex-wrap gap-2.5 mb-10 hero-tags">
+            <span class="inline-block bg-white text-dark/60 text-[12px] px-3 py-1.5 rounded border border-gray-200">ワークショップ</span>
+            <span class="inline-block bg-white text-dark/60 text-[12px] px-3 py-1.5 rounded border border-gray-200">AI活用</span>
+            <span class="inline-block bg-white text-dark/60 text-[12px] px-3 py-1.5 rounded border border-gray-200">システム開発</span>
+            <span class="inline-block bg-white text-dark/60 text-[12px] px-3 py-1.5 rounded border border-gray-200">DX推進</span>
+            <span class="inline-block bg-white text-dark/60 text-[12px] px-3 py-1.5 rounded border border-gray-200">Web制作</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 hero-cta">
+            <a href="#download" class="group inline-flex items-center justify-center gap-2 bg-white border border-gray-300 text-dark font-bold text-[14px] px-7 py-3.5 rounded hover:border-orange hover:text-orange cursor-pointer transition-all">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              お役立ち資料
+            </a>
+            <a href="#contact" class="group inline-flex items-center justify-center gap-2 bg-orange text-white font-bold text-[14px] px-7 py-3.5 rounded hover:opacity-90 cursor-pointer transition-opacity">
+              まずは相談する
+              <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="hidden lg:block hero-right">
+          <img src="https://picsum.photos/seed/workshop-team/640/480" alt="チームでのワークショップ風景" class="w-full rounded object-cover aspect-[4/3]" loading="eager">
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== LOGOS ===== -->
+  <section class="py-5 bg-white border-y border-gray-100 overflow-hidden">
+    <div class="max-w-site mx-auto px-5 sm:px-8 mb-2">
+      <p class="text-[11px] text-center text-mid font-en tracking-[0.15em] uppercase">Trusted Partners</p>
+    </div>
+    <div class="relative overflow-hidden" style="mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);">
+      <div class="marquee-track inline-flex items-center gap-14 whitespace-nowrap" style="min-width: max-content;">
+        <span class="text-[13px] font-medium text-gray-300">山梨日日新聞</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">黄金崎町役所</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">EY 山梨県</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">都留市</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">ユーシン</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">NTT DXパートナー</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">ヤマトヤ エンジニアリング</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">アウトクロップ</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">クリエイティブグループ</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">山梨日日新聞</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">黄金崎町役所</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">EY 山梨県</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">都留市</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">ユーシン</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">NTT DXパートナー</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">ヤマトヤ エンジニアリング</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">アウトクロップ</span><span class="text-gray-200">|</span>
+        <span class="text-[13px] font-medium text-gray-300">クリエイティブグループ</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== PROBLEM ===== -->
+  <section id="problem" class="py-24 lg:py-32 bg-white">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="mb-16 lg:mb-20 fade-up">
+        <p class="section-en mb-4">Problem</p>
+        <h2 class="section-title">こんなお困りごと、ありませんか？</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 lg:gap-8 stagger-cards">
+        <div class="bg-surface rounded p-7 lg:p-8 card-hover cursor-pointer group">
+          <div class="w-12 h-12 bg-white rounded flex items-center justify-center mb-6 border border-gray-100 group-hover:border-orange/30 transition-colors">
+            <svg class="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082"/></svg>
+          </div>
+          <h3 class="text-[17px] font-bold text-dark mb-4 font-heading">AI導入</h3>
+          <ul class="space-y-3 body-text">
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>AIを導入したいが、何から始めればいいかわからない</li>
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>社内にAI人材がいない</li>
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>生成AIの活用方法がわからない</li>
+          </ul>
+        </div>
+        <div class="bg-surface rounded p-7 lg:p-8 card-hover cursor-pointer group">
+          <div class="w-12 h-12 bg-white rounded flex items-center justify-center mb-6 border border-gray-100 group-hover:border-orange/30 transition-colors">
+            <svg class="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
+          </div>
+          <h3 class="text-[17px] font-bold text-dark mb-4 font-heading">業務の効率化</h3>
+          <ul class="space-y-3 body-text">
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>手作業が多く、業務効率が上がらない</li>
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>既存のシステムが古くなってきた</li>
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>データを活用しきれていない</li>
+          </ul>
+        </div>
+        <div class="bg-surface rounded p-7 lg:p-8 card-hover cursor-pointer group">
+          <div class="w-12 h-12 bg-white rounded flex items-center justify-center mb-6 border border-gray-100 group-hover:border-orange/30 transition-colors">
+            <svg class="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3"/></svg>
+          </div>
+          <h3 class="text-[17px] font-bold text-dark mb-4 font-heading">Webでの発信</h3>
+          <ul class="space-y-3 body-text">
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>Webサイトの集客が伸びない</li>
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>SNS運用に手が回らない</li>
+            <li class="flex items-start gap-2.5"><span class="w-[5px] h-[5px] rounded-full bg-orange mt-[11px] shrink-0"></span>ホームページをリニューアルしたい</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== WORKS ===== -->
+  <section id="works" class="py-24 lg:py-32 bg-surface">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="mb-16 lg:mb-20 fade-up">
+        <p class="section-en mb-4">Works</p>
+        <h2 class="section-title">多くのお客さまの課題を解決しています</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7 stagger-cards">
+        <a href="#" class="bg-white rounded overflow-hidden card-hover cursor-pointer group">
+          <div class="aspect-[16/10] overflow-hidden">
+            <img src="https://picsum.photos/seed/ai-workshop/480/300" alt="AI活用ワークショップ" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy">
+          </div>
+          <div class="p-6">
+            <div class="flex gap-2 mb-3">
+              <span class="text-[11px] font-bold text-orange bg-orange/5 px-2.5 py-0.5 rounded">AI活用</span>
+              <span class="text-[11px] text-mid bg-surface px-2.5 py-0.5 rounded">製造業</span>
+            </div>
+            <h3 class="font-heading font-bold text-dark text-[15px] leading-relaxed mb-2 group-hover:text-orange transition-colors">ワークショップから始まるAI活用支援</h3>
+            <p class="text-[13px] text-mid leading-relaxed">チーム全員での対話を通じ、現場に即したAI活用を実現</p>
+          </div>
+        </a>
+        <a href="#" class="bg-white rounded overflow-hidden card-hover cursor-pointer group">
+          <div class="aspect-[16/10] overflow-hidden">
+            <img src="https://picsum.photos/seed/web-design/480/300" alt="Webサイトリニューアル" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy">
+          </div>
+          <div class="p-6">
+            <div class="flex gap-2 mb-3">
+              <span class="text-[11px] font-bold text-orange bg-orange/5 px-2.5 py-0.5 rounded">Web制作</span>
+              <span class="text-[11px] text-mid bg-surface px-2.5 py-0.5 rounded">自治体</span>
+            </div>
+            <h3 class="font-heading font-bold text-dark text-[15px] leading-relaxed mb-2 group-hover:text-orange transition-colors">コーポレートサイトリニューアル</h3>
+            <p class="text-[13px] text-mid leading-relaxed">対話を重ね、地域に根ざした情報発信を支援</p>
+          </div>
+        </a>
+        <a href="#" class="bg-white rounded overflow-hidden card-hover cursor-pointer group">
+          <div class="aspect-[16/10] overflow-hidden">
+            <img src="https://picsum.photos/seed/dx-office/480/300" alt="DX導入支援" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy">
+          </div>
+          <div class="p-6">
+            <div class="flex gap-2 mb-3">
+              <span class="text-[11px] font-bold text-orange bg-orange/5 px-2.5 py-0.5 rounded">DX推進</span>
+              <span class="text-[11px] text-mid bg-surface px-2.5 py-0.5 rounded">中小企業</span>
+            </div>
+            <h3 class="font-heading font-bold text-dark text-[15px] leading-relaxed mb-2 group-hover:text-orange transition-colors">業務効率化のためのDX導入支援</h3>
+            <p class="text-[13px] text-mid leading-relaxed">手作業からの脱却、データ駆動の業務改革を伴走</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="mt-14">
+        <a href="#" class="link-arrow text-orange cursor-pointer hover:opacity-80">もっと見る<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== WHY ===== -->
+  <section id="why" class="py-24 lg:py-32 bg-white">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="mb-16 lg:mb-20 fade-up">
+        <p class="section-en mb-4">Why C-table</p>
+        <h2 class="section-title">C-tableが選ばれる3つの理由</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-10 lg:gap-16 stagger-cards">
+        <div class="cursor-pointer group">
+          <p class="font-en text-[56px] font-light text-gray-100 leading-none mb-4 select-none group-hover:text-orange/15 transition-colors">01</p>
+          <div class="w-px h-6 bg-orange mb-5"></div>
+          <h3 class="font-heading font-bold text-dark text-[17px] mb-3">ワークショップの専門家が在籍</h3>
+          <p class="body-text">対話型ワークショップを通じて、お客さまの本質的な課題を引き出し、チーム全体で共通認識をつくります。</p>
+        </div>
+        <div class="cursor-pointer group">
+          <p class="font-en text-[56px] font-light text-gray-100 leading-none mb-4 select-none group-hover:text-orange/15 transition-colors">02</p>
+          <div class="w-px h-6 bg-orange mb-5"></div>
+          <h3 class="font-heading font-bold text-dark text-[17px] mb-3">AI・開発・デザインの統合力</h3>
+          <p class="body-text">AI活用からシステム開発、デザインまでワンストップで対応。分断のない一貫したソリューションを提供します。</p>
+        </div>
+        <div class="cursor-pointer group">
+          <p class="font-en text-[56px] font-light text-gray-100 leading-none mb-4 select-none group-hover:text-orange/15 transition-colors">03</p>
+          <div class="w-px h-6 bg-orange mb-5"></div>
+          <h3 class="font-heading font-bold text-dark text-[17px] mb-3">地方拠点、現場主義の伴走型</h3>
+          <p class="body-text">山梨県都留市を拠点に、地方の現場に寄り添った丁寧な対応。遠隔だけでなく対面での支援も大切にしています。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== SERVICE ===== -->
+  <section id="service" class="py-24 lg:py-32 bg-warm">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="mb-16 lg:mb-20 fade-up">
+        <p class="section-en mb-4">Service</p>
+        <h2 class="section-title">課題にあわせて、最適な支援を提案します</h2>
+      </div>
+
+      <!-- Featured (caroa: image + text side-by-side) -->
+      <div class="bg-white rounded overflow-hidden mb-8 card-hover cursor-pointer fade-up">
+        <div class="grid lg:grid-cols-2">
+          <div class="aspect-video lg:aspect-auto min-h-[240px] relative overflow-hidden">
+            <img src="https://picsum.photos/seed/ai-hands-on/640/400" alt="生成AI体験ワークショップ" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-dark/50"></div>
+            <div class="relative flex items-center justify-center h-full p-10">
+              <div class="text-center">
+                <p class="font-en text-[11px] font-medium tracking-[0.15em] text-white/50 uppercase mb-3">Featured</p>
+                <h3 class="font-heading text-2xl lg:text-[32px] font-bold text-white leading-tight">生成AI体験<br>ワークショップ</h3>
+              </div>
+            </div>
+          </div>
+          <div class="p-8 lg:p-12 flex flex-col justify-center">
+            <p class="font-en text-[12px] font-medium tracking-[0.12em] text-orange mb-4">Try it yourself</p>
+            <p class="body-text mb-6">AIの基礎知識から実践的な活用方法まで、対話とハンズオンで学ぶワークショップ。参加者の業務課題に合わせたカスタマイズも可能です。</p>
+            <a href="#" class="link-arrow text-orange cursor-pointer hover:opacity-80">サービス詳細を見る<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-cards">
+        <div class="bg-white rounded p-6 card-hover cursor-pointer group">
+          <div class="w-10 h-10 bg-surface rounded flex items-center justify-center mb-4 group-hover:bg-orange/5 transition-colors"><svg class="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5"/></svg></div>
+          <h4 class="font-heading font-bold text-dark text-[14px] mb-1.5">AI活用</h4>
+          <p class="text-[13px] text-mid leading-relaxed">業務へのAI導入・活用を支援</p>
+        </div>
+        <div class="bg-white rounded p-6 card-hover cursor-pointer group">
+          <div class="w-10 h-10 bg-surface rounded flex items-center justify-center mb-4 group-hover:bg-orange/5 transition-colors"><svg class="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg></div>
+          <h4 class="font-heading font-bold text-dark text-[14px] mb-1.5">システム開発</h4>
+          <p class="text-[13px] text-mid leading-relaxed">業務システムの設計・開発</p>
+        </div>
+        <div class="bg-white rounded p-6 card-hover cursor-pointer group">
+          <div class="w-10 h-10 bg-surface rounded flex items-center justify-center mb-4 group-hover:bg-orange/5 transition-colors"><svg class="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3"/></svg></div>
+          <h4 class="font-heading font-bold text-dark text-[14px] mb-1.5">Webサイト制作・運用</h4>
+          <p class="text-[13px] text-mid leading-relaxed">サイト制作から運用まで</p>
+        </div>
+        <div class="bg-white rounded p-6 card-hover cursor-pointer group">
+          <div class="w-10 h-10 bg-surface rounded flex items-center justify-center mb-4 group-hover:bg-orange/5 transition-colors"><svg class="w-5 h-5 text-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347"/></svg></div>
+          <h4 class="font-heading font-bold text-dark text-[14px] mb-1.5">各種ワークショップ</h4>
+          <p class="text-[13px] text-mid leading-relaxed">チームビルディング研修</p>
+        </div>
+      </div>
+
+      <div class="mt-14">
+        <a href="#" class="group inline-flex items-center gap-2 bg-white border border-gray-300 text-dark font-bold text-[14px] px-7 py-3.5 rounded hover:border-orange hover:text-orange cursor-pointer transition-all">サービス一覧へ<svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== PROCESS ===== -->
+  <section id="process" class="py-24 lg:py-32 bg-white">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="mb-16 lg:mb-20 fade-up">
+        <p class="section-en mb-4">Process</p>
+        <h2 class="section-title">対話から始まる、5つのステップ</h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-5 process-steps">
+        <div class="flex lg:flex-col items-start lg:items-start gap-5 lg:gap-0">
+          <div class="w-12 h-12 bg-surface rounded flex items-center justify-center shrink-0 lg:mb-5 border border-gray-200">
+            <span class="font-en text-[14px] font-semibold text-orange">01</span>
+          </div>
+          <div>
+            <h4 class="font-heading text-[15px] font-bold text-dark mb-1.5">対話・ヒアリング</h4>
+            <p class="text-[13px] text-mid leading-relaxed">お客さまの課題と目標を丁寧にヒアリング</p>
+          </div>
+        </div>
+        <div class="flex lg:flex-col items-start lg:items-start gap-5 lg:gap-0">
+          <div class="w-12 h-12 bg-surface rounded flex items-center justify-center shrink-0 lg:mb-5 border border-gray-200">
+            <span class="font-en text-[14px] font-semibold text-orange">02</span>
+          </div>
+          <div>
+            <h4 class="font-heading text-[15px] font-bold text-dark mb-1.5">提案・企画</h4>
+            <p class="text-[13px] text-mid leading-relaxed">課題に最適なプランを設計・ご提案</p>
+          </div>
+        </div>
+        <div class="flex lg:flex-col items-start lg:items-start gap-5 lg:gap-0">
+          <div class="w-12 h-12 bg-surface rounded flex items-center justify-center shrink-0 lg:mb-5 border border-gray-200">
+            <span class="font-en text-[14px] font-semibold text-orange">03</span>
+          </div>
+          <div>
+            <h4 class="font-heading text-[15px] font-bold text-dark mb-1.5">プロトタイプ・制作</h4>
+            <p class="text-[13px] text-mid leading-relaxed">形にして確認、フィードバックを反映</p>
+          </div>
+        </div>
+        <div class="flex lg:flex-col items-start lg:items-start gap-5 lg:gap-0">
+          <div class="w-12 h-12 bg-surface rounded flex items-center justify-center shrink-0 lg:mb-5 border border-gray-200">
+            <span class="font-en text-[14px] font-semibold text-orange">04</span>
+          </div>
+          <div>
+            <h4 class="font-heading text-[15px] font-bold text-dark mb-1.5">導入・リリース</h4>
+            <p class="text-[13px] text-mid leading-relaxed">スムーズな展開をサポート</p>
+          </div>
+        </div>
+        <div class="flex lg:flex-col items-start lg:items-start gap-5 lg:gap-0">
+          <div class="w-12 h-12 bg-orange rounded flex items-center justify-center shrink-0 lg:mb-5">
+            <span class="font-en text-[14px] font-semibold text-white">05</span>
+          </div>
+          <div>
+            <h4 class="font-heading text-[15px] font-bold text-dark mb-1.5">運用・伴走</h4>
+            <p class="text-[13px] text-mid leading-relaxed">継続的な改善と成長をサポート</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== COMMUNITY ===== -->
+  <section id="community" class="py-24 lg:py-32 bg-surface">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="mb-16 lg:mb-20 fade-up">
+        <p class="section-en mb-4">Community</p>
+        <h2 class="section-title">地域の事業発展と人材育成を、応援しています</h2>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-cards">
+        <a href="#" class="bg-white rounded overflow-hidden card-hover cursor-pointer group">
+          <div class="aspect-[16/10] overflow-hidden"><img src="https://picsum.photos/seed/seminar-ai/480/300" alt="AI活用セミナー" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy"></div>
+          <div class="p-6"><span class="text-[11px] text-mid font-en">2026.03.15</span><h4 class="font-heading font-bold text-dark text-[15px] mt-2 group-hover:text-orange transition-colors">地域AI活用セミナーを開催しました</h4></div>
+        </a>
+        <a href="#" class="bg-white rounded overflow-hidden card-hover cursor-pointer group">
+          <div class="aspect-[16/10] overflow-hidden"><img src="https://picsum.photos/seed/kids-coding/480/300" alt="プログラミング教室" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy"></div>
+          <div class="p-6"><span class="text-[11px] text-mid font-en">2026.02.28</span><h4 class="font-heading font-bold text-dark text-[15px] mt-2 group-hover:text-orange transition-colors">中学生向けプログラミング体験教室</h4></div>
+        </a>
+        <a href="#" class="bg-white rounded overflow-hidden card-hover cursor-pointer group">
+          <div class="aspect-[16/10] overflow-hidden"><img src="https://picsum.photos/seed/conference-dx/480/300" alt="DXフォーラム" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy"></div>
+          <div class="p-6"><span class="text-[11px] text-mid font-en">2026.01.20</span><h4 class="font-heading font-bold text-dark text-[15px] mt-2 group-hover:text-orange transition-colors">山梨県DX推進フォーラムに登壇</h4></div>
+        </a>
+      </div>
+      <div class="mt-14"><a href="#" class="link-arrow text-orange cursor-pointer hover:opacity-80">もっと見る<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div>
+    </div>
+  </section>
+
+
+  <!-- ===== NEWS & COLUMN ===== -->
+  <section id="news" class="py-24 lg:py-32 bg-white">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="grid md:grid-cols-2 gap-16 lg:gap-24 fade-up">
+        <div>
+          <div class="mb-10">
+            <p class="section-en mb-3">News</p>
+            <h2 class="font-heading font-bold text-[22px] text-dark">お知らせ</h2>
+          </div>
+          <ul class="divide-y divide-gray-100 news-list">
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.03.27</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">コーポレートサイトをリニューアルしました</span></a></li>
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.03.15</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">AI活用セミナーの開催レポートを公開</span></a></li>
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.02.20</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">GW休業のお知らせ</span></a></li>
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.01.10</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">山梨県DX推進協議会に参画しました</span></a></li>
+          </ul>
+          <div class="mt-8"><a href="#" class="link-arrow text-orange cursor-pointer hover:opacity-80">もっと見る<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div>
+        </div>
+        <div>
+          <div class="mb-10">
+            <p class="section-en mb-3">Column</p>
+            <h2 class="font-heading font-bold text-[22px] text-dark">コラム</h2>
+          </div>
+          <ul class="divide-y divide-gray-100 news-list">
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.03.20</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">「地方企業のAI活用」最初の一歩は何か？</span></a></li>
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.03.05</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">ワークショップで組織が変わる3つの理由</span></a></li>
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.02.15</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">生成AIの業務活用 — 成功事例と落とし穴</span></a></li>
+            <li class="py-5"><a href="#" class="flex items-baseline gap-6 group cursor-pointer"><span class="text-[12px] text-mid font-en shrink-0 tabular-nums">2026.01.25</span><span class="text-[15px] text-dark/80 group-hover:text-orange transition-colors leading-relaxed">DXは「対話」から始めよう</span></a></li>
+          </ul>
+          <div class="mt-8"><a href="#" class="link-arrow text-orange cursor-pointer hover:opacity-80">もっと見る<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== DOWNLOAD ===== -->
+  <section id="download" class="py-24 lg:py-32 bg-surface">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="mb-16 lg:mb-20 fade-up">
+        <p class="section-en mb-4">Download</p>
+        <h2 class="section-title">AI活用資料ダウンロード</h2>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-cards">
+        <div class="bg-white rounded p-6 card-hover cursor-pointer group">
+          <div class="aspect-[4/3] rounded overflow-hidden mb-5"><img src="https://picsum.photos/seed/ai-guide-doc/400/300" alt="生成AI活用ガイド" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy"></div>
+          <p class="font-en text-[10px] text-orange uppercase tracking-[0.15em] font-medium mb-1">Free Download</p>
+          <h4 class="font-heading font-bold text-dark text-[14px] mb-4">生成AI活用ガイド — 中小企業向け入門編</h4>
+          <a href="#" class="inline-flex items-center gap-2 bg-orange text-white text-[12px] font-bold px-4 py-2.5 rounded hover:opacity-90 cursor-pointer transition-opacity">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>ダウンロード</a>
+        </div>
+        <div class="bg-white rounded p-6 card-hover cursor-pointer group">
+          <div class="aspect-[4/3] rounded overflow-hidden mb-5"><img src="https://picsum.photos/seed/dx-checklist/400/300" alt="DX推進チェックリスト" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy"></div>
+          <p class="font-en text-[10px] text-orange uppercase tracking-[0.15em] font-medium mb-1">Free Download</p>
+          <h4 class="font-heading font-bold text-dark text-[14px] mb-4">DX推進チェックリスト — 業務改善の10ステップ</h4>
+          <a href="#" class="inline-flex items-center gap-2 bg-orange text-white text-[12px] font-bold px-4 py-2.5 rounded hover:opacity-90 cursor-pointer transition-opacity">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>ダウンロード</a>
+        </div>
+        <div class="bg-white rounded p-6 card-hover cursor-pointer group">
+          <div class="aspect-[4/3] rounded overflow-hidden mb-5"><img src="https://picsum.photos/seed/web-handbook/400/300" alt="Webサイト改善ハンドブック" class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" loading="lazy"></div>
+          <p class="font-en text-[10px] text-orange uppercase tracking-[0.15em] font-medium mb-1">Free Download</p>
+          <h4 class="font-heading font-bold text-dark text-[14px] mb-4">Webサイト改善ハンドブック — 集客アップの実践テクニック</h4>
+          <a href="#" class="inline-flex items-center gap-2 bg-orange text-white text-[12px] font-bold px-4 py-2.5 rounded hover:opacity-90 cursor-pointer transition-opacity">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>ダウンロード</a>
+        </div>
+      </div>
+      <div class="mt-14"><a href="#" class="link-arrow text-orange cursor-pointer hover:opacity-80">もっと見る<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></a></div>
+    </div>
+  </section>
+
+
+  <!-- ===== CTA (caroa: full-width card with bg) ===== -->
+  <section id="contact" class="py-24 lg:py-32 bg-white">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="bg-dark rounded-lg lg:rounded-xl p-10 lg:p-20 relative overflow-hidden fade-up">
+        <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 24px 24px;"></div>
+        <div class="relative grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <p class="font-en text-[13px] font-medium tracking-[0.12em] text-orange mb-5">Contact</p>
+            <h2 class="font-heading font-bold text-[24px] lg:text-[36px] text-white leading-[1.4] mb-5">まずはお気軽に<br>お声がけください</h2>
+            <p class="text-[15px] text-white/50 leading-[2] mb-8">「何から始めればいいかわからない」「こんなことできる？」そんなご相談から大歓迎です。まずは対話から始めましょう。</p>
+            <a href="#" class="group inline-flex items-center gap-2 bg-orange text-white font-bold text-[14px] px-8 py-4 rounded hover:opacity-90 cursor-pointer transition-opacity cta-pulse">
+              まずは相談する
+              <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+          <div class="hidden lg:flex justify-center">
+            <img src="https://picsum.photos/seed/team-smile/400/320" alt="C-tableチーム" class="w-full max-w-[360px] rounded object-cover aspect-[5/4] opacity-80" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== FOOTER (caroa: dark, clean) ===== -->
+  <footer class="bg-dark text-white/40 py-16 lg:py-20">
+    <div class="max-w-site mx-auto px-5 sm:px-8">
+      <div class="grid md:grid-cols-4 gap-10 lg:gap-16 mb-14">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-8 h-8 bg-white/10 rounded flex items-center justify-center"><span class="text-white font-bold text-sm font-en">C</span></div>
+            <span class="text-lg font-bold text-white tracking-tight font-heading">C-table</span>
+          </div>
+          <p class="text-[14px] text-white/30 leading-[2] max-w-sm">山梨県都留市を拠点に、AI導入支援・システム開発・ワークショップを通じて、地域の事業発展と人材育成を応援する会社です。</p>
+        </div>
+        <div>
+          <h4 class="font-en text-[11px] text-white/20 uppercase tracking-[0.15em] font-medium mb-5">Service</h4>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">AI活用支援</a></li>
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">システム開発</a></li>
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">Webサイト制作</a></li>
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">ワークショップ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-en text-[11px] text-white/20 uppercase tracking-[0.15em] font-medium mb-5">Company</h4>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">会社概要</a></li>
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">お知らせ</a></li>
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">コラム</a></li>
+            <li><a href="#" class="text-[14px] text-white/40 hover:text-white cursor-pointer transition-colors">プライバシーポリシー</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-[12px] text-white/20 font-en">&copy; 2026 C-table Inc.</p>
+        <div class="flex items-center gap-6">
+          <a href="#" class="text-[12px] text-white/20 hover:text-white cursor-pointer transition-colors">お問い合わせ</a>
+          <a href="#" class="text-[12px] text-white/20 hover:text-white cursor-pointer transition-colors">資料請求</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- Back to top -->
+  <button id="back-to-top" class="back-to-top fixed bottom-6 right-6 z-40 w-10 h-10 bg-orange text-white rounded shadow-lg flex items-center justify-center cursor-pointer hover:opacity-90 opacity-0 translate-y-4 pointer-events-none" aria-label="トップに戻る">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"/></svg>
+  </button>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const nb = document.getElementById('navbar');
+      let ly = 0, tk = false;
+      function uNav() {
+        const y = window.scrollY;
+        if (y > 80) { nb.classList.add('shadow-sm'); nb.style.transform = (y > ly && y > 250) ? 'translateY(-100%)' : 'translateY(0)'; }
+        else { nb.classList.remove('shadow-sm'); nb.style.transform = 'translateY(0)'; }
+        ly = y; tk = false;
+      }
+      window.addEventListener('scroll', () => { if (!tk) { requestAnimationFrame(uNav); tk = true; } }, { passive: true });
+
+      // Scroll spy
+      const nl = document.querySelectorAll('.nav-link[data-section]');
+      const ss = [...nl].map(l => document.getElementById(l.dataset.section)).filter(Boolean);
+      function spy() { const y = window.scrollY + 100; let c = ''; ss.forEach(s => { if (s.offsetTop <= y) c = s.id; }); nl.forEach(l => l.classList.toggle('active', l.dataset.section === c)); }
+      window.addEventListener('scroll', spy, { passive: true });
+
+      // Back to top
+      const bt = document.getElementById('back-to-top');
+      window.addEventListener('scroll', () => { const s = window.scrollY > 500; bt.classList.toggle('opacity-0', !s); bt.classList.toggle('translate-y-4', !s); bt.classList.toggle('pointer-events-none', !s); bt.classList.toggle('opacity-100', s); bt.classList.toggle('translate-y-0', s); }, { passive: true });
+      bt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+      // Hamburger
+      const hb = document.getElementById('hamburger'), mm = document.getElementById('mobile-menu');
+      hb.addEventListener('click', () => { mm.classList.toggle('hidden'); hb.classList.toggle('hamburger-active'); hb.setAttribute('aria-expanded', mm.classList.contains('hidden') ? 'false' : 'true'); });
+      mm.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { mm.classList.add('hidden'); hb.classList.remove('hamburger-active'); }));
+
+      // GSAP
+      gsap.registerPlugin(ScrollTrigger);
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+        tl.from('.hero-title', { opacity: 0, y: 25, duration: 0.7, delay: 0.1 })
+          .from('.hero-sub', { opacity: 0, y: 20, duration: 0.6 }, '-=0.35')
+          .from('.hero-tags span', { opacity: 0, y: 10, duration: 0.3, stagger: 0.04 }, '-=0.3')
+          .from('.hero-cta', { opacity: 0, y: 15, duration: 0.5 }, '-=0.2')
+          .from('.hero-right', { opacity: 0, x: 30, duration: 0.7 }, '-=0.5');
+
+        document.querySelectorAll('.fade-up').forEach(el => {
+          gsap.from(el, { opacity: 0, y: 30, duration: 0.6, ease: 'power2.out', scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' } });
+        });
+        document.querySelectorAll('.stagger-cards').forEach(c => {
+          gsap.from(c.children, { opacity: 0, y: 25, duration: 0.45, ease: 'power2.out', stagger: 0.1, scrollTrigger: { trigger: c, start: 'top 88%', toggleActions: 'play none none none' } });
+        });
+        document.querySelectorAll('.process-steps').forEach(ps => {
+          gsap.from(ps.children, { opacity: 0, y: 20, duration: 0.35, stagger: 0.08, scrollTrigger: { trigger: ps, start: 'top 88%', toggleActions: 'play none none none' } });
+        });
+        document.querySelectorAll('.news-list').forEach(l => {
+          gsap.from(l.querySelectorAll('li'), { opacity: 0, x: -10, duration: 0.3, stagger: 0.06, scrollTrigger: { trigger: l, start: 'top 88%', toggleActions: 'play none none none' } });
+        });
+      }
+    });
+  </script>
+</body>
+</html>
